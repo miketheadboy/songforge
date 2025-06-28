@@ -1,0 +1,6 @@
+{
+  "name": "SongForge - A Songwriter's Companion",
+  "description": "A React and Tailwind CSS web application designed as a songwriter's companion, featuring AI-powered tools for lyrical and musical inspiration, a song canvas for drafting, and project management capabilities.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
