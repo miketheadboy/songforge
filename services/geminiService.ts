@@ -1,20 +1,22 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// Use Vite's import.meta.env to access environment variables
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.error("API_KEY environment variable not set. Gemini API calls will fail.");
+  console.error("VITE_GEMINI_API_KEY environment variable not set. Gemini API calls will fail.");
   // For this context, we'll let it proceed, and the SDK will likely fail on calls.
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// Initialize the AI client only if the API key is available.
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 const TEXT_MODEL = 'gemini-2.5-flash-preview-04-17';
 
 async function generateGeminiText(prompt: string, systemInstruction?: string, requestJson: boolean = false): Promise<string> {
-  if (!API_KEY) {
-    console.error("Gemini API call attempted without configured API_KEY.");
-    throw new Error("API Key not configured. Please ensure the API_KEY environment variable is set.");
+  if (!ai || !API_KEY) {
+    console.error("Gemini API call attempted without a configured API_KEY.");
+    throw new Error("API Key not configured. Please ensure the VITE_GEMINI_API_KEY environment variable is set in your .env file.");
   }
 
   if (typeof prompt !== 'string' || prompt.trim() === "") {
