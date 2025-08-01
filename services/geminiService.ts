@@ -98,9 +98,17 @@ Provide the full song draft.`;
     return generateGeminiText(prompt, systemInstruction);
   },
 
-  findRhymes: async (word: string): Promise<string[]> => {
-    const prompt = `Provide a list of at least 10-15 diverse rhyming words (perfect rhymes, near rhymes, creative/slant rhymes, multi-syllable rhymes) for the word "${word}". Return the list as a JSON array of strings. For example, if the word is "time", you might return ["chime", "climb", "crime", "dime", "grime", "lime", "prime", "rhyme", "sublime", "paradigm", "one time", "nighttime", "lifetime"]. Only return the JSON array itself, with no other text or markdown.`;
-    const systemInstruction = "You are a rhyming dictionary expert. Provide diverse and creative rhymes as a JSON array.";
+  findRhymingLines: async (line: string): Promise<string[]> => {
+    const prompt = `Based on the lyrical line provided, generate a list of 5-10 creative, new lyrical lines that rhyme with it. The new lines should feel like they could belong in the same song, matching the tone and theme suggested by the original line.
+
+Focus on the last significant word of the input line for the rhyme.
+
+For example, if the input is "I'm walking through a dream", you might generate lines like "Everything is as it seems" or "Chasing after sunlit streams".
+
+Return the list as a JSON array of strings. Only return the JSON array itself, with no other text or markdown.
+
+Original Line: "${line}"`;
+    const systemInstruction = "You are an expert rhyming assistant for songwriters. Your task is to generate full, creative rhyming lines that are thematically consistent with a given line of lyric. You always respond with a valid JSON array of strings.";
     
     const rawResponse = await generateGeminiText(prompt, systemInstruction, true); // requestJson set to true
     
@@ -116,13 +124,12 @@ Provide the full song draft.`;
       if (Array.isArray(parsedData) && parsedData.every(item => typeof item === 'string')) {
         return parsedData;
       } else {
-        console.error("Gemini API returned non-array or non-string array for rhymes:", parsedData);
-        throw new Error("Rhyme data is not in the expected format (array of strings).");
+        console.error("Gemini API returned non-array or non-string array for rhyming lines:", parsedData);
+        throw new Error("Rhyming line data is not in the expected format (array of strings).");
       }
     } catch (e) {
-      console.error("Failed to parse JSON response for rhymes:", e, "Raw response:", rawResponse);
-      // Fallback removed to ensure stricter JSON handling as per previous request. If JSON fails, it's an error.
-      throw new Error(`Failed to get rhymes. The API response was not parseable JSON. ${e instanceof Error ? e.message : String(e)}`);
+      console.error("Failed to parse JSON response for rhyming lines:", e, "Raw response:", rawResponse);
+      throw new Error(`Failed to get rhyming lines. The API response was not parseable JSON. ${e instanceof Error ? e.message : String(e)}`);
     }
   },
 

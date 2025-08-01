@@ -42,11 +42,11 @@ const LyricalWorkbench: React.FC<LyricalWorkbenchProps> = ({ onSendToCanvas, sho
   // --- State for Word Lab (Rephrasing) ---
   const [detonatorInput, setDetonatorInput] = useState('');
 
-  // --- State for Rhyme Navigator ---
-  const [rhymeWordInput, setRhymeWordInput] = useState('');
-  const [rhymes, setRhymes] = useState<string[]>([]);
-  const [isRhymeLoading, setIsRhymeLoading] = useState(false);
-  const [rhymeError, setRhymeError] = useState<string | null>(null);
+  // --- State for Rhyming Line Generator ---
+  const [rhymingLineInput, setRhymingLineInput] = useState('');
+  const [rhymingLines, setRhymingLines] = useState<string[]>([]);
+  const [isRhymingLineLoading, setIsRhymingLineLoading] = useState(false);
+  const [rhymingLineError, setRhymingLineError] = useState<string | null>(null);
 
   // --- State for Metaphor Mixer ---
   const [conceptInput, setConceptInput] = useState('');
@@ -68,33 +68,33 @@ const LyricalWorkbench: React.FC<LyricalWorkbenchProps> = ({ onSendToCanvas, sho
     );
   };
 
-  // --- Handlers for Rhyme Navigator ---
-  const handleFindRhymes = async () => {
-    if (!rhymeWordInput.trim()) {
-      setRhymeError("Please enter a word to find rhymes for.");
-      setRhymes([]);
+  // --- Handlers for Rhyming Line Generator ---
+  const handleFindRhymingLines = async () => {
+    if (!rhymingLineInput.trim()) {
+      setRhymingLineError("Please enter a line to find rhymes for.");
+      setRhymingLines([]);
       return;
     }
-    setIsRhymeLoading(true);
-    setRhymeError(null);
-    setRhymes([]);
+    setIsRhymingLineLoading(true);
+    setRhymingLineError(null);
+    setRhymingLines([]);
     try {
-      const foundRhymes = await geminiService.findRhymes(rhymeWordInput.trim());
-      setRhymes(foundRhymes);
-      if (foundRhymes.length === 0) {
-        setRhymeError(`No rhymes found for "${rhymeWordInput.trim()}". Try a different word or check spelling.`);
+      const foundLines = await geminiService.findRhymingLines(rhymingLineInput.trim());
+      setRhymingLines(foundLines);
+      if (foundLines.length === 0) {
+        setRhymingLineError(`No rhyming lines found for "${rhymingLineInput.trim()}". Try a different line or check spelling.`);
       }
     } catch (err) {
-      console.error("Rhyme Finder API error:", err);
-      setRhymeError(err instanceof Error ? err.message : "Failed to fetch rhymes. Please try again.");
-      setRhymes([]);
+      console.error("Rhyming Line Generator API error:", err);
+      setRhymingLineError(err instanceof Error ? err.message : "Failed to fetch rhyming lines. Please try again.");
+      setRhymingLines([]);
     } finally {
-      setIsRhymeLoading(false);
+      setIsRhymingLineLoading(false);
     }
   };
 
-  const handleRhymeClick = (rhyme: string) => {
-    onSendToCanvas(rhyme, 'draft');
+  const handleLineClick = (line: string) => {
+    onSendToCanvas(line, 'draft');
   };
 
   // --- Handlers for Metaphor Mixer ---
@@ -174,54 +174,53 @@ const LyricalWorkbench: React.FC<LyricalWorkbenchProps> = ({ onSendToCanvas, sho
         </button>
       </StyledSubsectionBox>
 
-      <StyledSubsectionBox title="Rhyme Navigator">
+      <StyledSubsectionBox title="Rhyming Line Generator">
         <div className="control-group">
-          <label htmlFor="rhymeWordInputWorkbench">Word to find rhymes for:</label>
-          <input
-            type="text"
-            id="rhymeWordInputWorkbench"
-            placeholder="e.g., dream, time, light"
-            value={rhymeWordInput}
-            onChange={(e) => setRhymeWordInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFindRhymes()}
-            className="input-base-style"
-            aria-label="Word to find rhymes for"
+          <label htmlFor="rhymingLineInputWorkbench">Line to find rhymes for:</label>
+          <textarea
+            id="rhymingLineInputWorkbench"
+            placeholder="e.g., The city sleeps below"
+            value={rhymingLineInput}
+            onChange={(e) => setRhymingLineInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleFindRhymingLines()}
+            className="input-base-style min-h-[60px]"
+            aria-label="Line to find rhymes for"
           />
         </div>
         <button 
-          onClick={handleFindRhymes} 
-          className="btn btn-secondary mt-3 flex items-center justify-center min-w-[150px]" // Added min-width for consistency with loader
-          disabled={isRhymeLoading}
+          onClick={handleFindRhymingLines}
+          className="btn btn-secondary mt-3 flex items-center justify-center min-w-[200px]"
+          disabled={isRhymingLineLoading}
           aria-live="polite"
         >
-          {isRhymeLoading ? <Loader /> : 'Find Rhymes 🗣️'}
+          {isRhymingLineLoading ? <Loader /> : 'Generate Rhyming Lines ✍️'}
         </button>
 
-        {isRhymeLoading && !rhymes.length && <div className="mt-2"><Loader /></div>}
+        {isRhymingLineLoading && <div className="mt-2"><Loader /></div>}
 
-        {rhymeError && (
+        {rhymingLineError && (
           <div className="output-display-area mt-4 text-[var(--accent-error-red)]" role="alert">
-            {rhymeError}
+            {rhymingLineError}
           </div>
         )}
 
-        {!isRhymeLoading && !rhymeError && rhymes.length > 0 && (
+        {!isRhymingLineLoading && !rhymingLineError && rhymingLines.length > 0 && (
           <div className="mt-4">
             <h4 className="font-artistic-subtitle text-lg text-[var(--text-secondary)] mb-2">
-              Rhymes for "{rhymeWordInput.trim()}":
+              Suggested lines that rhyme with "{rhymingLineInput.trim()}":
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
-              {rhymes.map((rhyme, index) => (
+            <div className="space-y-2 max-h-72 overflow-y-auto p-1">
+              {rhymingLines.map((line, index) => (
                 <div
-                  key={`${rhyme}-${index}`}
-                  className="rhyme-item-card"
-                  onClick={() => handleRhymeClick(rhyme)}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleRhymeClick(rhyme)}
+                  key={`${line}-${index}`}
+                  className="rhyming-line-card"
+                  onClick={() => handleLineClick(line)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleLineClick(line)}
                   role="button"
                   tabIndex={0}
-                  title={`Add "${rhyme}" to draft`}
+                  title={`Add "${line}" to draft`}
                 >
-                  {rhyme}
+                  {line}
                 </div>
               ))}
             </div>
